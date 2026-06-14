@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from cloudinary_storage.storage import VideoMediaCloudinaryStorage
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -35,7 +36,7 @@ class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     caption = models.TextField(max_length=1000, blank=True)
     image = models.ImageField(upload_to='posts/', blank=True, null=True)
-    video = models.FileField(upload_to='posts/videos/', blank=True, null=True)
+    video = models.FileField(upload_to='posts/videos/', storage=VideoMediaCloudinaryStorage(), blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -119,8 +120,8 @@ class Notification(models.Model):
 class Story(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stories')
     image = models.ImageField(upload_to='stories/images/', blank=True, null=True)
-    video = models.FileField(upload_to='stories/videos/', blank=True, null=True)
-    music = models.FileField(upload_to='stories/music/', blank=True, null=True)
+    video = models.FileField(upload_to='stories/videos/', storage=VideoMediaCloudinaryStorage(), blank=True, null=True)
+    music = models.FileField(upload_to='stories/music/', storage=VideoMediaCloudinaryStorage(), blank=True, null=True)
     caption = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

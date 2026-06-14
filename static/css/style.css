@@ -969,3 +969,9 @@ body {
 .story-nav-next {
     right: 10px;
 }
+
+/* Custom border-color utility */
+.border-color {
+    border-color: var(--border-color) !important;
+}
+
