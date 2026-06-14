@@ -6,6 +6,9 @@ from core.forms import RegistrationForm, PostForm
 
 class ZyraModelTests(TestCase):
     def setUp(self):
+        from core.redis_utils import redis_client, REDIS_AVAILABLE
+        if REDIS_AVAILABLE and redis_client:
+            redis_client.flushdb()
         self.user1 = User.objects.create_user(username='userone', password='testpassword123', email='userone@example.com')
         self.user2 = User.objects.create_user(username='usertwo', password='testpassword123', email='usertwo@example.com')
 
@@ -38,6 +41,9 @@ class ZyraModelTests(TestCase):
 
 class ZyraViewTests(TestCase):
     def setUp(self):
+        from core.redis_utils import redis_client, REDIS_AVAILABLE
+        if REDIS_AVAILABLE and redis_client:
+            redis_client.flushdb()
         self.client = Client()
         self.user1 = User.objects.create_user(username='userone', password='testpassword123')
         self.user2 = User.objects.create_user(username='usertwo', password='testpassword123')
@@ -208,3 +214,124 @@ class ZyraViewTests(TestCase):
         # Clean up files created during test
         story.image.delete()
         story.music.delete()
+
+class ZyraRedisIntegrationTests(TestCase):
+    def setUp(self):
+        from core.redis_utils import redis_client
+        self.redis = redis_client
+        if self.redis:
+            self.redis.flushdb()
+        self.user1 = User.objects.create_user(username='tester1', password='testpassword123')
+        self.user2 = User.objects.create_user(username='tester2', password='testpassword123')
+        self.post = Post.objects.create(user=self.user1, caption="Integration Test Post")
+
+    def tearDown(self):
+        if self.redis:
+            self.redis.flushdb()
+
+    def test_likes_count_caching(self):
+        from core.redis_utils import increment_like_count, get_like_count
+        
+        # Test increment
+        new_count = increment_like_count(self.post.id, 1)
+        self.assertEqual(new_count, 1)
+        
+        # Test get_like_count using cache
+        cached_count = get_like_count(self.post.id, lambda: 999) # 999 is fallback, should not be called
+        self.assertEqual(cached_count, 1)
+        
+        # Test get_like_count fallback if not cached
+        if self.redis:
+            self.redis.delete(f"post:{self.post.id}:stats")
+        fallback_count = get_like_count(self.post.id, lambda: 5)
+        self.assertEqual(fallback_count, 5)
+
+    def test_follower_stats_caching(self):
+        from core.redis_utils import increment_follower_stats, get_user_stats
+        
+        # Populate initial stats cache (0, 0)
+        get_user_stats(self.user1.id, lambda: (0, 0))
+        get_user_stats(self.user2.id, lambda: (0, 0))
+        
+        increment_follower_stats(self.user1.id, self.user2.id, 1)
+        
+        # user1 following count should be 1. user2 followers count should be 1.
+        followers, following = get_user_stats(self.user1.id, lambda: (10, 10))
+        self.assertEqual(following, 1)
+        self.assertEqual(followers, 0)
+        
+        followers2, following2 = get_user_stats(self.user2.id, lambda: (10, 10))
+        self.assertEqual(followers2, 1)
+        self.assertEqual(following2, 0)
+
+    def test_rate_limiting(self):
+        from core.redis_utils import check_rate_limit
+        
+        # First 3 requests should be allowed
+        self.assertTrue(check_rate_limit(self.user1.id, limit=3, prefix="test_limit"))
+        self.assertTrue(check_rate_limit(self.user1.id, limit=3, prefix="test_limit"))
+        self.assertTrue(check_rate_limit(self.user1.id, limit=3, prefix="test_limit"))
+        
+        # 4th request should be blocked
+        self.assertFalse(check_rate_limit(self.user1.id, limit=3, prefix="test_limit"))
+
+    def test_feed_caching_and_fanout(self):
+        from core.redis_utils import get_cached_feed
+        from core.tasks import fanout_new_post_task
+        
+        # Make user2 follow user1
+        Follow.objects.create(follower=self.user2, following=self.user1)
+        
+        # Trigger fanout
+        fanout_new_post_task(self.post.id)
+        
+        # Check user2 cached feed contains post.id
+        cached_posts = get_cached_feed(self.user2.id, page=1, page_size=5)
+        self.assertIn(self.post.id, cached_posts)
+
+    def test_presence_heartbeat_and_pruning(self):
+        from core.consumers import update_user_presence, remove_user_presence
+        from core.tasks import prune_presence_task
+        from core.redis_utils import redis_client
+        import time
+        from asgiref.sync import async_to_sync
+        
+        # Update presence
+        async_to_sync(update_user_presence)(self.user1.username)
+        
+        # Check ZSET score
+        score = self.redis.zscore("presence_users", self.user1.username)
+        self.assertIsNotNone(score)
+        
+        # Run pruning - user should NOT be pruned as score is fresh
+        pruned_count = prune_presence_task()
+        self.assertEqual(pruned_count, 0)
+        self.assertIsNotNone(self.redis.zscore("presence_users", self.user1.username))
+        
+        # Manually set score to be old (expired)
+        self.redis.zadd("presence_users", {self.user1.username: time.time() - 35.0})
+        
+        # Run pruning - user should now be pruned
+        pruned_count = prune_presence_task()
+        self.assertEqual(pruned_count, 1)
+        self.assertIsNone(self.redis.zscore("presence_users", self.user1.username))
+
+    def test_fanout_chunking_execution(self):
+        from core.tasks import fanout_new_post_task
+        
+        # Create many followers for user1 to verify chunking logic works without issues
+        users = [User(username=f'chunk_follower_{i}', password='p') for i in range(15)]
+        User.objects.bulk_create(users)
+        
+        created_users = User.objects.filter(username__startswith='chunk_follower_')
+        follows = [Follow(follower=u, following=self.user1) for u in created_users]
+        Follow.objects.bulk_create(follows)
+        
+        # Call fanout
+        fanout_new_post_task(self.post.id)
+        
+        # Verify feed contains the post for one of the followers
+        from core.redis_utils import get_cached_feed
+        cached_posts = get_cached_feed(created_users[0].id, page=1, page_size=5)
+        self.assertIn(self.post.id, cached_posts)
+

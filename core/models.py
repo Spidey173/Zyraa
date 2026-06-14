@@ -2,23 +2,62 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from cloudinary_storage.storage import VideoMediaCloudinaryStorage
+
+class CloudinaryURLWrapper:
+    def __init__(self, url):
+        self.url = url
+    
+    def __str__(self):
+        return self.url or ""
+    
+    @property
+    def name(self):
+        return self.url
+
+    def delete(self, *args, **kwargs):
+        # Graceful no-op for file-deletion cleanups
+        pass
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     bio = models.TextField(max_length=500, blank=True)
-    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    profile_pic_url = models.URLField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username}'s profile"
 
     @property
+    def profile_pic(self):
+        if self.profile_pic_url:
+            return CloudinaryURLWrapper(self.profile_pic_url)
+        return None
+
+    @profile_pic.setter
+    def profile_pic(self, value):
+        if isinstance(value, CloudinaryURLWrapper):
+            self.profile_pic_url = value.url
+        elif hasattr(value, 'url'):
+            self.profile_pic_url = value.url
+        else:
+            self.profile_pic_url = value
+
+    @property
     def followers_count(self):
-        return Follow.objects.filter(following=self.user).count()
+        from .redis_utils import get_user_stats
+        followers, _ = get_user_stats(self.user.id, lambda: (
+            Follow.objects.filter(following=self.user).count(),
+            Follow.objects.filter(follower=self.user).count()
+        ))
+        return followers
 
     @property
     def following_count(self):
-        return Follow.objects.filter(follower=self.user).count()
+        from .redis_utils import get_user_stats
+        _, following = get_user_stats(self.user.id, lambda: (
+            Follow.objects.filter(following=self.user).count(),
+            Follow.objects.filter(follower=self.user).count()
+        ))
+        return following
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -35,8 +74,8 @@ def save_user_profile(sender, instance, **kwargs):
 class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     caption = models.TextField(max_length=1000, blank=True)
-    image = models.ImageField(upload_to='posts/', blank=True, null=True)
-    video = models.FileField(upload_to='posts/videos/', storage=VideoMediaCloudinaryStorage(), blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True, null=True)
+    video_url = models.URLField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -46,8 +85,39 @@ class Post(models.Model):
         return f"Post by {self.user.username} at {self.created_at}"
 
     @property
+    def image(self):
+        if self.image_url:
+            return CloudinaryURLWrapper(self.image_url)
+        return None
+
+    @image.setter
+    def image(self, value):
+        if isinstance(value, CloudinaryURLWrapper):
+            self.image_url = value.url
+        elif hasattr(value, 'url'):
+            self.image_url = value.url
+        else:
+            self.image_url = value
+
+    @property
+    def video(self):
+        if self.video_url:
+            return CloudinaryURLWrapper(self.video_url)
+        return None
+
+    @video.setter
+    def video(self, value):
+        if isinstance(value, CloudinaryURLWrapper):
+            self.video_url = value.url
+        elif hasattr(value, 'url'):
+            self.video_url = value.url
+        else:
+            self.video_url = value
+
+    @property
     def likes_count(self):
-        return self.likes.count()
+        from .redis_utils import get_like_count
+        return get_like_count(self.id, lambda: self.likes.count())
 
     @property
     def comments_count(self):
@@ -119,9 +189,9 @@ class Notification(models.Model):
 
 class Story(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stories')
-    image = models.ImageField(upload_to='stories/images/', blank=True, null=True)
-    video = models.FileField(upload_to='stories/videos/', storage=VideoMediaCloudinaryStorage(), blank=True, null=True)
-    music = models.FileField(upload_to='stories/music/', storage=VideoMediaCloudinaryStorage(), blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True, null=True)
+    video_url = models.URLField(max_length=500, blank=True, null=True)
+    music_url = models.URLField(max_length=500, blank=True, null=True)
     caption = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -130,3 +200,48 @@ class Story(models.Model):
 
     def __str__(self):
         return f"Story by {self.user.username} at {self.created_at}"
+
+    @property
+    def image(self):
+        if self.image_url:
+            return CloudinaryURLWrapper(self.image_url)
+        return None
+
+    @image.setter
+    def image(self, value):
+        if isinstance(value, CloudinaryURLWrapper):
+            self.image_url = value.url
+        elif hasattr(value, 'url'):
+            self.image_url = value.url
+        else:
+            self.image_url = value
+
+    @property
+    def video(self):
+        if self.video_url:
+            return CloudinaryURLWrapper(self.video_url)
+        return None
+
+    @video.setter
+    def video(self, value):
+        if isinstance(value, CloudinaryURLWrapper):
+            self.video_url = value.url
+        elif hasattr(value, 'url'):
+            self.video_url = value.url
+        else:
+            self.video_url = value
+
+    @property
+    def music(self):
+        if self.music_url:
+            return CloudinaryURLWrapper(self.music_url)
+        return None
+
+    @music.setter
+    def music(self, value):
+        if isinstance(value, CloudinaryURLWrapper):
+            self.music_url = value.url
+        elif hasattr(value, 'url'):
+            self.music_url = value.url
+        else:
+            self.music_url = value

@@ -20,4 +20,5 @@ urlpatterns = [
     path('user/<str:username>/follow/', views.follow_user, name='follow_user'),
     path('profile/<str:username>/followers/', views.followers_list, name='followers_list'),
     path('profile/<str:username>/following/', views.following_list, name='following_list'),
+    path('api/cloudinary-signature/', views.get_cloudinary_signature, name='cloudinary_signature'),
 ]

@@ -29,28 +29,33 @@ class RegistrationForm(forms.ModelForm):
 
 class UserProfileForm(forms.ModelForm):
     bio = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Tell us about yourself...'}), required=False)
+    profile_pic_url = forms.URLField(widget=forms.HiddenInput(), required=False)
     profile_pic = forms.ImageField(widget=forms.FileInput(attrs={'class': 'form-control'}), required=False)
 
     class Meta:
         model = UserProfile
-        fields = ['bio', 'profile_pic']
+        fields = ['bio', 'profile_pic_url']
 
 class PostForm(forms.ModelForm):
     caption = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'What\'s on your mind?'}), required=False)
+    image_url = forms.URLField(widget=forms.HiddenInput(), required=False)
+    video_url = forms.URLField(widget=forms.HiddenInput(), required=False)
     image = forms.ImageField(widget=forms.FileInput(attrs={'class': 'form-control'}), required=False)
     video = forms.FileField(widget=forms.FileInput(attrs={'class': 'form-control'}), required=False)
 
     class Meta:
         model = Post
-        fields = ['caption', 'image', 'video']
+        fields = ['caption', 'image_url', 'video_url']
 
     def clean(self):
         cleaned_data = super().clean()
         caption = cleaned_data.get('caption')
+        image_url = cleaned_data.get('image_url')
+        video_url = cleaned_data.get('video_url')
         image = cleaned_data.get('image')
         video = cleaned_data.get('video')
 
-        if not caption and not image and not video:
+        if not caption and not image_url and not video_url and not image and not video:
             raise forms.ValidationError("You must provide either a caption, image, or video.")
         return cleaned_data
 

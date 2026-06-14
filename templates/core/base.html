@@ -43,6 +43,7 @@
                     <li class="sidebar-item">
                         <a href="{% url 'notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
                             <i class="bi bi-heart"></i> <span>Notifications</span>
+                            <span id="notifications-badge-count" class="badge bg-danger rounded-pill ms-1 d-none">0</span>
                         </a>
                     </li>
                     <li class="sidebar-item">
@@ -107,22 +108,24 @@
                 <button type="button" class="btn-close btn-close-white" id="closeCreateModalBtn"></button>
             </div>
             <div class="custom-modal-body">
-                <form method="POST" enctype="multipart/form-data" action="{% url 'home' %}">
+                <form method="POST" action="{% url 'home' %}" id="create-post-form">
                     {% csrf_token %}
                     <div class="mb-3">
                         <textarea name="caption" class="form-control form-control-custom" rows="4" placeholder="Write a caption..." required></textarea>
                     </div>
                     <div class="mb-3">
                         <label for="id_modal_image" class="form-label text-white-50 small">Photo</label>
-                        <input type="file" name="image" id="id_modal_image" accept="image/*" class="form-control form-control-custom">
+                        <input type="file" id="id_modal_image" accept="image/*" class="form-control form-control-custom">
+                        <input type="hidden" name="image_url" id="id_post_image_url">
                     </div>
                     <div class="mb-3">
                         <label for="id_modal_video" class="form-label text-white-50 small">Video</label>
-                        <input type="file" name="video" id="id_modal_video" accept="video/*" class="form-control form-control-custom">
+                        <input type="file" id="id_modal_video" accept="video/*" class="form-control form-control-custom">
+                        <input type="hidden" name="video_url" id="id_post_video_url">
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <button type="button" class="btn btn-outline-custom" id="cancelCreateModalBtn">Cancel</button>
-                        <button type="submit" class="btn btn-grad px-4">Share</button>
+                        <button type="submit" class="btn btn-grad px-4" id="share-post-btn">Share</button>
                     </div>
                 </form>
             </div>
@@ -137,19 +140,22 @@
                 <button type="button" class="btn-close btn-close-white" id="closeStoryModalBtn"></button>
             </div>
             <div class="custom-modal-body">
-                <form method="POST" enctype="multipart/form-data" action="{% url 'create_story' %}">
+                <form method="POST" action="{% url 'create_story' %}" id="create-story-form">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="id_story_image" class="form-label text-white-50 small">Photo (Image Story)</label>
-                        <input type="file" name="image" id="id_story_image" accept="image/*" class="form-control form-control-custom">
+                        <input type="file" id="id_story_image" accept="image/*" class="form-control form-control-custom">
+                        <input type="hidden" name="cloudinary_image_url" id="id_story_image_url">
                     </div>
                     <div class="mb-3">
                         <label for="id_story_video" class="form-label text-white-50 small">Video (Video Story)</label>
-                        <input type="file" name="video" id="id_story_video" accept="video/*" class="form-control form-control-custom">
+                        <input type="file" id="id_story_video" accept="video/*" class="form-control form-control-custom">
+                        <input type="hidden" name="cloudinary_video_url" id="id_story_video_url">
                     </div>
                     <div class="mb-3">
                         <label for="id_story_music" class="form-label text-white-50 small">Background Music (MP3 - Optional for Photo Stories)</label>
-                        <input type="file" name="music" id="id_story_music" accept="audio/*" class="form-control form-control-custom">
+                        <input type="file" id="id_story_music" accept="audio/*" class="form-control form-control-custom">
+                        <input type="hidden" name="cloudinary_music_url" id="id_story_music_url">
                     </div>
                     <div class="mb-3">
                         <label for="id_story_caption" class="form-label text-white-50 small">Caption</label>
@@ -157,7 +163,7 @@
                     </div>
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <button type="button" class="btn btn-outline-custom" id="cancelStoryModalBtn">Cancel</button>
-                        <button type="submit" class="btn btn-grad px-4">Share to Story</button>
+                        <button type="submit" class="btn btn-grad px-4" id="share-story-btn">Share to Story</button>
                     </div>
                 </form>
             </div>
@@ -256,6 +262,192 @@
                 if (e.target === storyModal) toggleStoryModal(false);
             });
         }
+    </script>
+
+    <!-- Toast notification container -->
+    <div id="toast-notification-container" style="position: fixed; bottom: 80px; right: 20px; z-index: 9999; width: 320px;"></div>
+
+    <script>
+        {% if user.is_authenticated %}
+        document.addEventListener("DOMContentLoaded", function () {
+            const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+            const wsUrl = `${wsScheme}://${window.location.host}/ws/notifications/`;
+            const socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function (e) {
+                // Send heartbeat every 15 seconds to keep presence active
+                socket.heartbeatInterval = setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: "heartbeat" }));
+                    }
+                }, 15000);
+            };
+            
+            socket.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+                if (data.type === "presence") {
+                    updatePresenceBadge(data.username, data.status);
+                } else {
+                    showToastNotification(data);
+                    incrementNotificationBadge();
+                }
+            };
+            
+            socket.onclose = function (e) {
+                console.warn("Notification Socket closed unexpectedly.");
+                if (socket.heartbeatInterval) {
+                    clearInterval(socket.heartbeatInterval);
+                }
+            };
+
+            function showToastNotification(notif) {
+                const toastContainer = document.getElementById("toast-notification-container");
+                if (!toastContainer) return;
+                
+                const toast = document.createElement("div");
+                toast.className = "toast-card p-3 mb-2 rounded border-0 text-white shadow-lg";
+                toast.style.background = "rgba(139, 92, 246, 0.9)";
+                toast.style.backdropFilter = "blur(10px)";
+                toast.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <img src="${notif.sender_profile_pic || 'https://via.placeholder.com/32'}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                        <div>
+                            <strong>@${notif.sender_username}</strong> ${notif.notification_type}d your post.
+                        </div>
+                    </div>
+                `;
+                toastContainer.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.transition = "opacity 0.5s ease";
+                    toast.style.opacity = "0";
+                    setTimeout(() => toast.remove(), 500);
+                }, 5000);
+            }
+            
+            function incrementNotificationBadge() {
+                const badge = document.getElementById("notifications-badge-count");
+                if (badge) {
+                    let count = parseInt(badge.textContent || "0") + 1;
+                    badge.textContent = count;
+                    badge.classList.remove("d-none");
+                }
+            }
+            
+            function updatePresenceBadge(username, status) {
+                const badges = document.querySelectorAll(`.presence-badge-${username}`);
+                badges.forEach(badge => {
+                    if (status === "online") {
+                        badge.classList.add("bg-success");
+                        badge.classList.remove("bg-secondary");
+                    } else {
+                        badge.classList.add("bg-secondary");
+                        badge.classList.remove("bg-success");
+                    }
+                });
+            }
+
+            // Cloudinary Direct Upload Helper
+            async function uploadFileDirectly(file, resourceType) {
+                if (!file) return "";
+                
+                const signatureResponse = await fetch('/api/cloudinary-signature/');
+                if (!signatureResponse.ok) {
+                    throw new Error("Could not fetch upload credentials from server.");
+                }
+                const sigData = await signatureResponse.json();
+                
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("api_key", sigData.api_key);
+                formData.append("timestamp", sigData.timestamp);
+                formData.append("signature", sigData.signature);
+                formData.append("folder", sigData.folder);
+                
+                const uploadUrl = `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/${resourceType}/upload`;
+                const uploadResponse = await fetch(uploadUrl, {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error("Direct media upload to Cloudinary failed.");
+                }
+                
+                const result = await uploadResponse.json();
+                return result.secure_url;
+            }
+
+            // Post Form Submission Interceptor
+            const createPostForm = document.getElementById('create-post-form');
+            if (createPostForm) {
+                createPostForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const submitBtn = document.getElementById('share-post-btn');
+                    const imageFile = document.getElementById('id_modal_image').files[0];
+                    const videoFile = document.getElementById('id_modal_video').files[0];
+                    
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                    
+                    try {
+                        if (imageFile) {
+                            const imgUrl = await uploadFileDirectly(imageFile, "image");
+                            document.getElementById('id_post_image_url').value = imgUrl;
+                        }
+                        if (videoFile) {
+                            const vidUrl = await uploadFileDirectly(videoFile, "video");
+                            document.getElementById('id_post_video_url').value = vidUrl;
+                        }
+                        this.submit();
+                    } catch(err) {
+                        alert(err.message);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Share';
+                    }
+                });
+            }
+
+            // Story Form Submission Interceptor
+            const createStoryForm = document.getElementById('create-story-form');
+            if (createStoryForm) {
+                createStoryForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const submitBtn = document.getElementById('share-story-btn');
+                    const storyImg = document.getElementById('id_story_image').files[0];
+                    const storyVid = document.getElementById('id_story_video').files[0];
+                    const storyMusic = document.getElementById('id_story_music').files[0];
+                    
+                    if (!storyImg && !storyVid) {
+                        alert("You must select either an image or a video for the story.");
+                        return;
+                    }
+                    
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...';
+                    
+                    try {
+                        if (storyImg) {
+                            const imgUrl = await uploadFileDirectly(storyImg, "image");
+                            document.getElementById('id_story_image_url').value = imgUrl;
+                        }
+                        if (storyVid) {
+                            const vidUrl = await uploadFileDirectly(storyVid, "video");
+                            document.getElementById('id_story_video_url').value = vidUrl;
+                        }
+                        if (storyMusic) {
+                            const musicUrl = await uploadFileDirectly(storyMusic, "video");
+                            document.getElementById('id_story_music_url').value = musicUrl;
+                        }
+                        this.submit();
+                    } catch(err) {
+                        alert(err.message);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Share to Story';
+                    }
+                });
+            }
+        });
+        {% endif %}
     </script>
 </body>
 </html>

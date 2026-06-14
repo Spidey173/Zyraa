@@ -78,18 +78,19 @@
                     <div class="collapse mt-4" id="editProfileSection">
                         <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
                             <h5 class="text-white fw-bold mb-3">Update Profile Information</h5>
-                            <form method="POST" enctype="multipart/form-data" action="{% url 'user_profile' username=profile_user.username %}">
+                            <form method="POST" action="{% url 'user_profile' username=profile_user.username %}" id="profile-edit-form">
                                 {% csrf_token %}
                                 <div class="mb-3">
                                     <label for="id_bio" class="form-label text-white-50 small">Bio</label>
                                     {{ profile_form.bio }}
                                 </div>
                                 <div class="mb-3">
-                                    <label for="id_profile_pic" class="form-label text-white-50 small">Profile Picture</label>
-                                    {{ profile_form.profile_pic }}
+                                    <label for="id_profile_pic_file" class="form-label text-white-50 small">Profile Picture</label>
+                                    <input type="file" id="id_profile_pic_file" accept="image/*" class="form-control form-control-custom">
+                                    {{ profile_form.profile_pic_url }}
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-grad">Save Changes</button>
+                                    <button type="submit" class="btn btn-grad" id="save-profile-btn">Save Changes</button>
                                     <button type="button" class="btn btn-outline-custom" data-bs-toggle="collapse" data-bs-target="#editProfileSection">Cancel</button>
                                 </div>
                             </form>
@@ -446,6 +447,52 @@ document.addEventListener('DOMContentLoaded', function() {
             tabPostsBtn.className = 'btn btn-link text-white-50 text-decoration-none fw-bold px-4 py-3';
             postsContent.style.display = 'none';
             savedContent.style.display = 'block';
+        });
+    }
+
+    // Profile Edit Direct Upload to Cloudinary
+    const profileForm = document.getElementById('profile-edit-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('save-profile-btn');
+            const fileInput = document.getElementById('id_profile_pic_file');
+            
+            if (fileInput.files.length > 0) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...';
+                
+                try {
+                    const sigResp = await fetch('/api/cloudinary-signature/');
+                    const sigData = await sigResp.json();
+                    
+                    const formData = new FormData();
+                    formData.append("file", fileInput.files[0]);
+                    formData.append("api_key", sigData.api_key);
+                    formData.append("timestamp", sigData.timestamp);
+                    formData.append("signature", sigData.signature);
+                    formData.append("folder", sigData.folder);
+                    
+                    const uploadUrl = `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/image/upload`;
+                    const uploadResp = await fetch(uploadUrl, {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    if (!uploadResp.ok) {
+                        throw new Error("Cloudinary upload failed");
+                    }
+                    
+                    const uploadResult = await uploadResp.json();
+                    document.getElementById('id_profile_pic_url').value = uploadResult.secure_url;
+                } catch (err) {
+                    alert(err.message);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Save Changes';
+                    return;
+                }
+            }
+            this.submit();
         });
     }
 });
