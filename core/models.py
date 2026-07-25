@@ -53,6 +53,31 @@ class Post(models.Model):
     def comments_count(self):
         return self.comments.count()
 
+    @property
+    def get_image_url(self):
+        if not self.image:
+            return None
+        val = str(self.image)
+        if val.startswith('http://') or val.startswith('https://'):
+            return val
+        try:
+            return self.image.url
+        except Exception:
+            return None
+
+    @property
+    def get_video_url(self):
+        if not self.video:
+            return None
+        val = str(self.video)
+        if val.startswith('http://') or val.startswith('https://'):
+            return val
+        try:
+            return self.video.url
+        except Exception:
+            return None
+
+
 class Like(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')

@@ -40,9 +40,9 @@
 
         <!-- Post Body / Media -->
         <div class="post-body position-relative" style="margin: 0 -16px;">
-            {% if post.video %}
+            {% if post.get_video_url %}
                 <div class="post-video-container" style="border-radius: 0; border: none; margin-bottom: 0;">
-                    <video src="{{ post.video.url }}" class="post-video w-100" loop playsinline muted></video>
+                    <video src="{{ post.get_video_url }}" class="post-video w-100" loop playsinline muted></video>
                     <button type="button" class="video-audio-toggle">
                         <i class="bi bi-volume-mute-fill"></i>
                     </button>
@@ -50,8 +50,8 @@
                         <i class="bi bi-play-fill"></i>
                     </div>
                 </div>
-            {% elif post.image %}
-                <img src="{{ post.image.url }}" alt="Post Content" class="w-100 post-image-element" style="max-height: 600px; object-fit: cover; cursor: pointer;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop';">
+            {% elif post.get_image_url %}
+                <img src="{{ post.get_image_url }}" alt="Post Content" class="w-100 post-image-element" style="max-height: 600px; object-fit: cover; cursor: pointer;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop';">
             {% endif %}
             <i class="bi bi-heart-fill double-tap-heart"></i>
         </div>

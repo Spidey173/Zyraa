@@ -6,7 +6,7 @@
     {% for post in posts %}
         <div class="reel-card" data-post-id="{{ post.id }}">
             <div class="reel-video-wrapper">
-                <video src="{{ post.video.url }}" class="reel-video" loop playsinline autoplay muted onerror="this.onerror=null; this.src='https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4';"></video>
+                <video src="{{ post.get_video_url }}" class="reel-video" loop playsinline autoplay muted onerror="this.onerror=null; this.src='https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4';"></video>
                 
                 <!-- Floating Mute Icon -->
                 <button type="button" class="video-audio-toggle" style="top: 20px; right: 20px; bottom: auto;">
