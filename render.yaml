@@ -13,8 +13,8 @@ services:
       - key: DATABASE_URL
         value: "postgresql://neondb_owner:npg_XDtgskY6eK8w@ep-steep-meadow-ahw3njh6-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
       - key: CLOUDINARY_CLOUD_NAME
-        sync: false
+        value: "dg04dd5o1"
       - key: CLOUDINARY_API_KEY
-        sync: false
+        value: "243896825183337"
       - key: CLOUDINARY_API_SECRET
-        sync: false
+        value: "JgyFPK4aQ7qkNNWWqA6Dqmitx3M"
