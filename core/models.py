@@ -20,6 +20,19 @@ class UserProfile(models.Model):
     def following_count(self):
         return Follow.objects.filter(follower=self.user).count()
 
+    @property
+    def get_profile_pic_url(self):
+        if not self.profile_pic:
+            return None
+        val = str(self.profile_pic)
+        if val.startswith('http://') or val.startswith('https://'):
+            return val
+        try:
+            return self.profile_pic.url
+        except Exception:
+            return None
+
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:

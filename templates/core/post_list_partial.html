@@ -4,8 +4,8 @@
         <div class="post-header d-flex align-items-center justify-content-between mb-3">
             <div class="d-flex align-items-center">
                 <a href="{% url 'user_profile' username=post.user.username %}" class="text-decoration-none">
-                    {% if post.user.profile.profile_pic %}
-                        <img src="{{ post.user.profile.profile_pic.url }}" alt="Avatar" class="post-avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
+                    {% if post.user.profile.get_profile_pic_url %}
+                        <img src="{{ post.user.profile.get_profile_pic_url }}" alt="Avatar" class="post-avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff;">
                     {% else %}
                         <div class="post-avatar d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px; border-radius: 50%; background: var(--instagram-grad); font-size: 0.9rem; line-height: 1;">
                             {{ post.user.username|slice:":1"|upper }}

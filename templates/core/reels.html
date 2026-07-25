@@ -22,8 +22,8 @@
                 <div class="reel-overlay-info">
                     <div class="d-flex align-items-center mb-3">
                         <a href="{% url 'user_profile' username=post.user.username %}" class="text-decoration-none">
-                            {% if post.user.profile.profile_pic %}
-                                <img src="{{ post.user.profile.profile_pic.url }}" alt="Avatar" class="rounded-circle border border-2 border-white" style="width: 36px; height: 36px; object-fit: cover;">
+                            {% if post.user.profile.get_profile_pic_url %}
+                                <img src="{{ post.user.profile.get_profile_pic_url }}" alt="Avatar" class="rounded-circle border border-2 border-white" style="width: 36px; height: 36px; object-fit: cover;">
                             {% else %}
                                 <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; font-size: 0.9rem; background: var(--instagram-grad);">
                                     {{ post.user.username|slice:":1"|upper }}
