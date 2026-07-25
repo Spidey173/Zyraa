@@ -2,6 +2,7 @@ services:
   - type: web
     name: zyraa-web
     env: python
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application"
     envVars:
@@ -24,3 +25,4 @@ databases:
   - name: zyraa-db
     databaseName: zyraa
     user: zyraa_user
+    plan: free
