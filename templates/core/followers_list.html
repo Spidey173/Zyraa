@@ -17,8 +17,8 @@
                     <div class="d-flex justify-content-between align-items-center py-3 border-bottom border-color">
                         <div class="d-flex align-items-center">
                             <a href="{% url 'user_profile' username=relation.follower.username %}" class="text-decoration-none">
-                                {% if relation.follower.profile.profile_pic %}
-                                    <img src="{{ relation.follower.profile.profile_pic.url }}" alt="Avatar" class="rounded-circle me-3 border border-purple" style="width: 48px; height: 48px; object-fit: cover;">
+                                {% if relation.follower.profile.get_profile_pic_url %}
+                                    <img src="{{ relation.follower.profile.get_profile_pic_url }}" alt="Avatar" class="rounded-circle me-3 border border-purple" style="width: 48px; height: 48px; object-fit: cover;">
                                 {% else %}
                                     <div class="rounded-circle me-3 border border-purple text-white fw-bold d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.1rem; background: var(--primary-grad);">
                                         {{ relation.follower.username|slice:":1"|upper }}

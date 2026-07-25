@@ -9,8 +9,8 @@
             <!-- Cover Banner -->
             <div class="profile-cover">
                 <div class="profile-avatar-container">
-                    {% if profile_user.profile.profile_pic %}
-                        <img src="{{ profile_user.profile.profile_pic.url }}" alt="Profile Avatar" class="profile-avatar">
+                    {% if profile_user.profile.get_profile_pic_url %}
+                        <img src="{{ profile_user.profile.get_profile_pic_url }}" alt="Profile Avatar" class="profile-avatar">
                     {% else %}
                         <div class="profile-avatar d-flex align-items-center justify-content-center text-white fw-bold" style="background: var(--primary-grad); font-size: 3rem;">
                             {{ profile_user.username|slice:":1"|upper }}

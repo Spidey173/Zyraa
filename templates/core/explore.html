@@ -32,8 +32,8 @@
                             <div class="d-flex align-items-center user-result-card justify-content-between">
                                 <div class="d-flex align-items-center">
                                     <a href="{% url 'user_profile' username=profile_user.username %}">
-                                        {% if profile_user.profile.profile_pic %}
-                                            <img src="{{ profile_user.profile.profile_pic.url }}" alt="Profile" class="user-result-avatar">
+                                        {% if profile_user.profile.get_profile_pic_url %}
+                                            <img src="{{ profile_user.profile.get_profile_pic_url }}" alt="Profile" class="user-result-avatar">
                                         {% else %}
                                             <div class="user-result-avatar d-flex align-items-center justify-content-center text-white fw-bold" style="background: var(--primary-grad); font-size: 1.2rem;">
                                                 {{ profile_user.username|slice:":1"|upper }}

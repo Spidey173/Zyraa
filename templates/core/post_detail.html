@@ -14,8 +14,8 @@
             <div class="post-header justify-content-between">
                 <div class="d-flex align-items-center">
                     <a href="{% url 'user_profile' username=post.user.username %}" class="text-decoration-none">
-                        {% if post.user.profile.profile_pic %}
-                            <img src="{{ post.user.profile.profile_pic.url }}" alt="Avatar" class="post-avatar">
+                        {% if post.user.profile.get_profile_pic_url %}
+                            <img src="{{ post.user.profile.get_profile_pic_url }}" alt="Avatar" class="post-avatar">
                         {% else %}
                             <div class="post-avatar d-flex align-items-center justify-content-center text-white fw-bold" style="background: var(--primary-grad); font-size: 1.1rem; line-height: 1;">
                                 {{ post.user.username|slice:":1"|upper }}
@@ -84,8 +84,8 @@
                 {% for comment in comments %}
                     <div class="d-flex mb-3 align-items-start p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color);">
                         <a href="{% url 'user_profile' username=comment.user.username %}" class="text-decoration-none">
-                            {% if comment.user.profile.profile_pic %}
-                                <img src="{{ comment.user.profile.profile_pic.url }}" alt="Commenter Avatar" class="rounded-circle me-3 border border-purple" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% if comment.user.profile.get_profile_pic_url %}
+                                <img src="{{ comment.user.profile.get_profile_pic_url }}" alt="Commenter Avatar" class="rounded-circle me-3 border border-purple" style="width: 40px; height: 40px; object-fit: cover;">
                             {% else %}
                                 <div class="rounded-circle me-3 border border-purple text-white fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem; background: var(--primary-grad);">
                                     {{ comment.user.username|slice:":1"|upper }}

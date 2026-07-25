@@ -23,8 +23,8 @@
             {% for su in story_users %}
                 <div class="story-bubble" style="cursor: pointer;" onclick="openStoryViewer('{{ su.user.username }}')">
                     <div class="story-avatar-wrapper">
-                        {% if su.user.profile.profile_pic %}
-                            <img src="{{ su.user.profile.profile_pic.url }}" alt="{{ su.user.username }}" class="story-avatar">
+                        {% if su.user.profile.get_profile_pic_url %}
+                            <img src="{{ su.user.profile.get_profile_pic_url }}" alt="{{ su.user.username }}" class="story-avatar">
                         {% else %}
                             <div class="story-avatar d-flex align-items-center justify-content-center text-white fw-bold" style="background: var(--instagram-grad); font-size: 1.1rem;">
                                 {{ su.user.username|slice:":1"|upper }}
@@ -67,8 +67,8 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
                 <a href="{% url 'user_profile' username=user.username %}" class="text-decoration-none">
-                    {% if user.profile.profile_pic %}
-                        <img src="{{ user.profile.profile_pic.url }}" alt="Avatar" class="rounded-circle me-3 border border-purple" style="width: 48px; height: 48px; object-fit: cover;">
+                    {% if user.profile.get_profile_pic_url %}
+                        <img src="{{ user.profile.get_profile_pic_url }}" alt="Avatar" class="rounded-circle me-3 border border-purple" style="width: 48px; height: 48px; object-fit: cover;">
                     {% else %}
                         <div class="rounded-circle me-3 border border-purple text-white fw-bold d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.2rem; background: var(--instagram-grad);">
                             {{ user.username|slice:":1"|upper }}
@@ -94,8 +94,8 @@
                 <div class="suggestion-item">
                     <div class="d-flex align-items-center">
                         <a href="{% url 'user_profile' username=su.username %}" class="text-decoration-none">
-                            {% if su.profile.profile_pic %}
-                                <img src="{{ su.profile.profile_pic.url }}" alt="{{ su.username }}" class="rounded-circle me-3" style="width: 36px; height: 36px; object-fit: cover;">
+                            {% if su.profile.get_profile_pic_url %}
+                                <img src="{{ su.profile.get_profile_pic_url }}" alt="{{ su.username }}" class="rounded-circle me-3" style="width: 36px; height: 36px; object-fit: cover;">
                             {% else %}
                                 <div class="rounded-circle me-3 text-white fw-bold d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; font-size: 0.95rem; background: var(--instagram-grad);">
                                     {{ su.username|slice:":1"|upper }}

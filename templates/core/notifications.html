@@ -12,8 +12,8 @@
                     <div class="d-flex align-items-center justify-content-between py-3 border-bottom border-dark">
                         <div class="d-flex align-items-center">
                             <a href="{% url 'user_profile' username=notification.sender.username %}" class="text-decoration-none">
-                                {% if notification.sender.profile.profile_pic %}
-                                    <img src="{{ notification.sender.profile.profile_pic.url }}" alt="Profile" class="rounded-circle me-3" style="width: 44px; height: 44px; object-fit: cover; border: 1px solid #262626;">
+                                {% if notification.sender.profile.get_profile_pic_url %}
+                                    <img src="{{ notification.sender.profile.get_profile_pic_url }}" alt="Profile" class="rounded-circle me-3" style="width: 44px; height: 44px; object-fit: cover; border: 1px solid #262626;">
                                 {% else %}
                                     <div class="rounded-circle me-3 text-white fw-bold d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-size: 1.1rem; background: var(--instagram-grad);">
                                         {{ notification.sender.username|slice:":1"|upper }}
