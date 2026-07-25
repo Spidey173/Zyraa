@@ -113,26 +113,13 @@ PHOTO_POST_URLS = [
 ]
 
 VIDEO_POST_URLS = [
-    "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-beautiful-waterfall-41486-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-hands-typing-on-a-laptop-keyboard-41584-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-white-sand-beach-and-blue-sea-42023-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-serving-a-cup-of-hot-coffee-41585-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-woman-smiling-41583-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-city-traffic-at-night-41586-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-sun-setting-over-the-ocean-41587-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-young-woman-skateboarding-at-sunset-41588-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-view-from-a-car-window-driving-through-the-city-41589-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-chef-preparing-a-gourmet-dish-41590-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-dog-running-in-the-grass-41591-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-neon-lights-in-a-futuristic-city-41592-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-rain-drops-falling-on-a-window-pane-41593-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-painter-brushing-paint-on-canvas-41594-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-person-walking-in-a-snowy-forest-41595-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-spinning-vinyl-record-on-turntable-41596-large.mp4",
-    "https://assets.mixkit.co/videos/preview/mixkit-time-lapse-of-clouds-moving-over-mountains-41597-large.mp4"
+    "https://res.cloudinary.com/demo/video/upload/v1687352345/samples/elephants.mp4",
+    "https://res.cloudinary.com/demo/video/upload/v1687352345/samples/sea-turtle.mp4",
+    "https://res.cloudinary.com/demo/video/upload/v1687352345/samples/dance-2.mp4",
+    "https://res.cloudinary.com/demo/video/upload/v1687352345/samples/cld-sample-video.mp4",
+    "https://res.cloudinary.com/demo/video/upload/v1687352345/samples/bike.mp4",
+    "https://res.cloudinary.com/demo/video/upload/v1687352345/samples/sea-turtle.mp4",
+    "https://res.cloudinary.com/demo/video/upload/v1687352345/samples/elephants.mp4"
 ]
 
 USERS_SEED_DATA = [
