@@ -47,7 +47,7 @@
                         </div>
                     </div>
                 {% elif post.image %}
-                    <img src="{{ post.image.url }}" alt="Post Content" class="w-100 rounded-3 mb-3 border border-color" style="max-height: 600px; object-fit: contain;">
+                    <img src="{{ post.image.url }}" alt="Post Content" class="w-100 rounded-3 mb-3 border border-color" style="max-height: 600px; object-fit: contain;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop';">
                 {% endif %}
             </div>
 

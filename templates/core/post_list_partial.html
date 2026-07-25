@@ -51,7 +51,7 @@
                     </div>
                 </div>
             {% elif post.image %}
-                <img src="{{ post.image.url }}" alt="Post Content" class="w-100 post-image-element" style="max-height: 600px; object-fit: cover; cursor: pointer;">
+                <img src="{{ post.image.url }}" alt="Post Content" class="w-100 post-image-element" style="max-height: 600px; object-fit: cover; cursor: pointer;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop';">
             {% endif %}
             <i class="bi bi-heart-fill double-tap-heart"></i>
         </div>

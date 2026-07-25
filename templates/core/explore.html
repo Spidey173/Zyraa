@@ -74,7 +74,7 @@
                                     <video src="{{ post.video.url }}" class="explore-image" autoplay loop muted playsinline></video>
                                     <i class="bi bi-play-btn-fill text-white position-absolute" style="top: 12px; right: 12px; font-size: 1.25rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 2;"></i>
                                 {% elif post.image %}
-                                    <img src="{{ post.image.url }}" alt="Post image" class="explore-image">
+                                    <img src="{{ post.image.url }}" alt="Post image" class="explore-image" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop';">
                                 {% else %}
                                     <div class="w-100 h-100 d-flex align-items-center justify-content-center p-3 text-white-50 text-center" style="background: #1a162b;">
                                         <span>{{ post.caption|truncatechars:60 }}</span>
